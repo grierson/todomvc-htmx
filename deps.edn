@@ -8,9 +8,13 @@
         hiccup/hiccup {:mvn/version "2.0.0-RC1"}}
 
  :aliases
- {:repl/conjure {:extra-deps {nrepl/nrepl       {:mvn/version "0.9.0"}
-                              cider/cider-nrepl {:mvn/version "0.28.4"}}
-                 :main-opts  ["-m" "nrepl.cmdline"
-                              "--middleware" "[cider.nrepl/cider-middleware]"
-                              "--interactive"]}
+ {:repl {:extra-deps {nrepl/nrepl       {:mvn/version "0.9.0"}
+                      cider/cider-nrepl {:mvn/version "0.28.4"}}
+         :main-opts  ["-m" "nrepl.cmdline"
+                      "--middleware" "[cider.nrepl/cider-middleware]"
+                      "--interactive"]}
+
+  :dev {:extra-paths ["dev/src"]
+        :extra-deps {org.clojure/tools.namespace {:mvn/version "1.4.4"}}}
+
   :test       {:extra-paths ["test"]}}}

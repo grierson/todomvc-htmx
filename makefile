@@ -1,4 +1,4 @@
 .PHONY: repl
 
 repl:
-	clj -M:repl/conjure
+	clj -M:repl:dev

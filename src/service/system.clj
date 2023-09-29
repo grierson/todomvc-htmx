@@ -1,7 +1,7 @@
-(ns service.main
+(ns service.system
   (:require
    [donut.system :as ds]
-   [service.service :as service]
+   [service.routes :as routes]
    [org.httpkit.server :as hk-server])
   (:gen-class))
 
@@ -19,10 +19,6 @@
 (def system
   {::ds/defs
    {:http {:server #::ds{:start (fn [_]
-                                  (start #'service/app))
+                                  (start #'routes/app))
                          :stop  (fn [{:keys [::ds/instance]}]
                                   (stop instance))}}}})
-
-(comment
-  (def a (ds/signal system ::ds/start))
-  (ds/signal a ::ds/stop))

@@ -1,4 +1,4 @@
-(ns service.service
+(ns service.routes
   (:require [reitit.ring :as ring]
             [reitit.coercion.malli :as mcoercion]
             [reitit.ring.coercion :as rrc]
@@ -18,7 +18,7 @@
                           :crossorigin "anonymous"}]]
                [:body
                 [:p {:style {:background-color "red"}} "Hello from HTML"]
-                [:div {:hx-put "/messages"} "Put To Messages"]]]
+                [:div {:hx-put "/messages"} "Put To Messages here"]]]
               (h/html {:mode :html})
               (str "\n"))})
 
