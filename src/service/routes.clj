@@ -1,45 +1,84 @@
 (ns service.routes
-  (:require [reitit.ring :as ring]
-            [reitit.coercion.malli :as mcoercion]
-            [reitit.ring.coercion :as rrc]
-            [reitit.ring.middleware.parameters :as parameters]
-            [reitit.ring.middleware.muuntaja :as muuntaja]
-            [muuntaja.core :as m]
-            [hiccup2.core :as h]))
+  (:require
+   [muuntaja.core :as m]
+   [reitit.coercion.malli :as mcoercion]
+   [reitit.ring :as ring]
+   [reitit.ring.coercion :as rrc]
+   [reitit.ring.middleware.muuntaja :as muuntaja]
+   [reitit.ring.middleware.parameters :as parameters]
+   [service.domain :as domain]
+   [service.ui :as ui]
+   [hiccup2.core :as h]))
 
-(defn- index-page
-  [_]
-  {:status 200
-   :body (->> [:html
-               [:head
-                [:title "Hello world!"]
-                [:script {:src "https://unpkg.com/htmx.org@1.9.6"
-                          :integrity "sha384-FhXw7b6AlE/jyjlZH5iHa/tTe9EpJ1Y55RjcgPbjeWMskSxZt1v9qkxLJWNJaGni"
-                          :crossorigin "anonymous"}]]
-               [:body
-                [:p {:style {:background-color "red"}} "Hello from HTML"]
-                [:div {:hx-put "/messages"} "Put To Messages here"]]]
-              (h/html {:mode :html})
-              (str "\n"))})
+(defn render [handler & [status]]
+  {:status (or status 200)
+   :body (str (h/html handler))})
 
-(defn get-messages
-  [_]
-  {:status 200
-   :body (str (h/html [:h1 "Messages here from server"]))})
+(defn app-index [{:keys [parameters headers]}]
+  (let [filter (get-in parameters [:query :filter])
+        ajax-request? (get headers "hx-request")]
+    (if (and filter ajax-request?)
+      (render (list (ui/todo-list (domain/filtered-todo filter @domain/todos))
+                    (ui/todo-filters filter)))
+      (render (ui/template filter)))))
+
+(defn add-item [{:keys [parameters]}]
+  (let [name (get-in parameters [:form :todo])
+        todo (domain/add-todo! name)]
+    (render (list (ui/todo-item (val (last todo)))
+                  (ui/item-count)))))
+
+(defn edit-item [{:keys [parameters]}]
+  (let [id (get-in parameters [:path :id])
+        {:keys [id name]} (get @domain/todos id)]
+    (render (ui/todo-edit id name))))
+
+(defn update-item [{:keys [parameters]}]
+  (let [id (get-in parameters [:path :id])
+        name (get-in parameters [:form :name])
+        todo (domain/update-todo! id name)]
+    (render (ui/todo-item (get todo id)))))
+
+(defn patch-item [{:keys [parameters]}]
+  (let [id (get-in parameters [:path :id])
+        _ (domain/toggle-todo! id)
+        todo-item (get @domain/todos id)]
+    (render (list (ui/todo-item todo-item)
+                  (ui/item-count)
+                  (ui/clear-completed-button)))))
+
+(defn delete-item [{:keys [parameters]}]
+  (domain/remove-todo! (get-in parameters [:path :id]))
+  (render (ui/item-count)))
+
+(defn clear-completed [_]
+  (domain/remove-all-completed-todo)
+  (render (list (ui/todo-list @domain/todos)
+                (ui/item-count)
+                (ui/clear-completed-button))))
 
 (def app
   (ring/ring-handler
    (ring/router
-    [["/" {:get {:handler index-page}}]
-     ["/messages" {:put {:handler get-messages}}]
-     ["/math" {:get {:parameters {:query {:x int?, :y int?}}
-                     :responses  {200 {:body {:total int?}}}
-                     :handler    (fn [{{{:keys [x y]} :query} :parameters}]
-                                   {:status 200
-                                    :body   {:total (+ x y)}})}}]]
-    {:data {:coercion   mcoercion/coercion
+    [["/" {:get {:parameters {:query [:map [:filter string?]]}
+                 :handler app-index}}]
+     ["/todos" {:delete {:handler clear-completed}
+                :post {:parameters {:form [:map [:todo string?]]}
+                       :handler add-item}}]
+     ["/todos/update/:id" {:parameters {:path [:map [:id int?]]
+                                        :form [:map [:name string?]]}
+                           :patch {:handler update-item}}]
+     ["/todos/:id" {:parameters {:path [:map [:id int?]]}
+                    :delete {:handler delete-item}
+                    :patch {:handler  patch-item}}]
+     ["/todos/edit/:id" {:parameters {:path [:map [:id int?]]}
+                         :get {:handler  edit-item}}]]
+    {:conflicts nil
+     :data {:coercion   mcoercion/coercion
             :muuntaja   m/instance
             :middleware [parameters/parameters-middleware
                          rrc/coerce-request-middleware
+                         rrc/coerce-response-middleware
+                         muuntaja/format-request-middleware
                          muuntaja/format-response-middleware
-                         rrc/coerce-response-middleware]}})))
+                         muuntaja/format-negotiate-middleware]}})))
