@@ -1,4 +1,4 @@
 .PHONY: repl
 
 repl:
-	clj -M:repl:dev
+	clj -M:repl:dev:test

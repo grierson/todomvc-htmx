@@ -17,4 +17,5 @@
   :dev {:extra-paths ["dev/src"]
         :extra-deps {org.clojure/tools.namespace {:mvn/version "1.4.4"}}}
 
-  :test       {:extra-paths ["test"]}}}
+  :test       {:extra-paths ["test"]
+               :extra-deps {org.htmlunit/htmlunit {:mvn/version "3.5.0"}}}}}
