@@ -60,7 +60,7 @@
 (def app
   (ring/ring-handler
    (ring/router
-    [["/" {:get {:parameters {:query [:map [:filter string?]]}
+    [["/" {:get {:parameters {:query [:map [:filter {:optional true} string?]]}
                  :handler app-index}}]
      ["/todos" {:delete {:handler clear-completed}
                 :post {:parameters {:form [:map [:todo string?]]}
