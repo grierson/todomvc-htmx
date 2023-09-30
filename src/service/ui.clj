@@ -68,7 +68,7 @@
    [:html
     [:head
      [:meta {:charset "UTF-8"}]
-     [:title "Htmx + Babashka"]
+     [:title "Htmx + Clojure"]
      [:link {:href "https://unpkg.com/todomvc-app-css@2.4.2/index.css" :rel "stylesheet"}]
      [:script {:src "https://unpkg.com/htmx.org@1.9.6/dist/htmx.min.js" :defer true}]
      [:script {:src "https://unpkg.com/hyperscript.org@0.9.11/dist/_hyperscript.min.js" :defer true}]]
