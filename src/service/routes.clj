@@ -7,72 +7,79 @@
    [reitit.ring.middleware.muuntaja :as muuntaja]
    [reitit.ring.middleware.parameters :as parameters]
    [service.domain :as domain]
+   [service.application :as application]
    [service.ui :as ui]
-   [hiccup2.core :as h]))
+   [hiccup2.core :as h]
+   [service.database :as database]))
 
 (defn render [handler & [status]]
   {:status (or status 200)
    :body (str (h/html handler))})
 
-(defn app-index [{:keys [parameters headers]}]
+(defn app-index [db {:keys [parameters headers]}]
   (let [filter (get-in parameters [:query :filter])
-        ajax-request? (get headers "hx-request")]
+        ajax-request? (get headers "hx-request")
+        todos (database/get-todos db)]
     (if (and filter ajax-request?)
-      (render (list (ui/todo-list (domain/filtered-todo filter @domain/todos))
+      (render (list (ui/todo-list (domain/filtered-todo todos filter))
                     (ui/todo-filters filter)))
-      (render (ui/template filter)))))
+      (render (ui/template todos filter)))))
 
-(defn add-item [{:keys [parameters]}]
+(defn add-item [db {:keys [parameters]}]
   (let [name (get-in parameters [:form :todo])
-        todo (domain/add-todo! name)]
+        todo (application/add-todo! db name)
+        todos (database/get-todos db)]
     (render (list (ui/todo-item (val (last todo)))
-                  (ui/item-count)))))
+                  (ui/item-count todos)))))
 
-(defn edit-item [{:keys [parameters]}]
+(defn edit-item [db {:keys [parameters]}]
   (let [id (get-in parameters [:path :id])
-        {:keys [id name]} (get @domain/todos id)]
+        {:keys [id name]} (get @db id)]
     (render (ui/todo-edit id name))))
 
-(defn update-item [{:keys [parameters]}]
+(defn update-item [db {:keys [parameters]}]
   (let [id (get-in parameters [:path :id])
         name (get-in parameters [:form :name])
-        todo (domain/update-todo! id name)]
+        todo (application/update-todo! db id name)]
     (render (ui/todo-item (get todo id)))))
 
-(defn patch-item [{:keys [parameters]}]
+(defn patch-item [db {:keys [parameters]}]
   (let [id (get-in parameters [:path :id])
-        _ (domain/toggle-todo! id)
-        todo-item (get @domain/todos id)]
+        _ (application/toggle-todo! db id)
+        todo-item (database/get-todo db id)
+        todos (database/get-todos db)]
     (render (list (ui/todo-item todo-item)
-                  (ui/item-count)
-                  (ui/clear-completed-button)))))
+                  (ui/item-count todos)
+                  (ui/clear-completed-button todos)))))
 
-(defn delete-item [{:keys [parameters]}]
-  (domain/remove-todo! (get-in parameters [:path :id]))
-  (render (ui/item-count)))
+(defn delete-item [db {:keys [parameters]}]
+  (application/remove-todo! db (get-in parameters [:path :id]))
+  (render (ui/item-count (database/get-todos db))))
 
-(defn clear-completed [_]
-  (domain/remove-all-completed-todo)
-  (render (list (ui/todo-list @domain/todos)
-                (ui/item-count)
-                (ui/clear-completed-button))))
+(defn clear-completed [db _request]
+  (application/remove-all-completed-todo db)
+  (let [todos (database/get-todos db)]
+    (render (list (ui/todo-list todos)
+                  (ui/item-count todos)
+                  (ui/clear-completed-button todos)))))
 
-(def app
+(defn app
+  [{:keys [db]}]
   (ring/ring-handler
    (ring/router
     [["/" {:get {:parameters {:query [:map [:filter {:optional true} string?]]}
-                 :handler app-index}}]
-     ["/todos" {:delete {:handler clear-completed}
+                 :handler (partial app-index db)}}]
+     ["/todos" {:delete {:handler (partial clear-completed db)}
                 :post {:parameters {:form [:map [:todo string?]]}
-                       :handler add-item}}]
+                       :handler (partial add-item db)}}]
      ["/todos/update/:id" {:parameters {:path [:map [:id int?]]
                                         :form [:map [:name string?]]}
-                           :patch {:handler update-item}}]
+                           :patch {:handler (partial update-item db)}}]
      ["/todos/:id" {:parameters {:path [:map [:id int?]]}
-                    :delete {:handler delete-item}
-                    :patch {:handler  patch-item}}]
+                    :delete {:handler (partial delete-item db)}
+                    :patch {:handler  (partial patch-item db)}}]
      ["/todos/edit/:id" {:parameters {:path [:map [:id int?]]}
-                         :get {:handler  edit-item}}]]
+                         :get {:handler  (partial edit-item db)}}]]
     {:conflicts nil
      :data {:coercion   mcoercion/coercion
             :muuntaja   m/instance

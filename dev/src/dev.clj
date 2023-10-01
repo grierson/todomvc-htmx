@@ -8,6 +8,8 @@
   system/system)
 
 (comment
-  (dsr/start)
+  (try (dsr/start)
+       (catch Exception e
+         (print e)))
   (dsr/restart)
   (dsr/stop))

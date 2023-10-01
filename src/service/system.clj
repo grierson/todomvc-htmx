@@ -7,20 +7,26 @@
 
 (def system
   {::ds/defs
-   {:http {:server #::ds{:config {:port 3000}
+   {:env #::ds{:config {:port 3000}}
+    :infrastucture {:db #::ds{:start (fn [_] (atom (sorted-map)))}}
+    :http {:server #::ds{:config {:port (ds/ref [:env ::ds/config :port])
+                                  :handler (ds/ref [:http :handler])}
                          :start (fn [{:keys [::ds/config]}]
                                   (hk-server/run-server
-                                   #'routes/app
+                                   (:handler config)
                                    {:port (:port config)
                                     :join? false
                                     :async? true
                                     :legacy-return-value? false}))
                          :stop  (fn [{:keys [::ds/instance]}]
-                                  (hk-server/server-stop! instance))}}}})
+                                  (hk-server/server-stop! instance))}
+           :handler #::ds{:config {:db (ds/ref [:infrastucture :db])}
+                          :start (fn [{:keys [::ds/config]}]
+                                   (routes/app config))}}}})
 
 (defn start [opts]
   (ds/start
    system
-   {[:http :server ::ds/config] {:port (:port opts 3000)}}))
+   {[:env ::ds/config] {:port (:port opts 3000)}}))
 
 (defn stop [sut] (ds/stop sut))

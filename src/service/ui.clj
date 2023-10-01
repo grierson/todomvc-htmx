@@ -30,8 +30,8 @@
                  :name "name"
                  :value name}]])
 
-(defn item-count []
-  (let [items-left (domain/get-items-left)]
+(defn item-count [todos]
+  (let [items-left (domain/get-items-left todos)]
     [:span#todo-count.todo-count {:hx-swap-oob "true"}
      [:strong items-left]]))
 
@@ -52,17 +52,17 @@
              :class (when (= filter "completed") "selected")} "Completed"]]])
 
 (defn clear-completed-button
-  []
+  [todos]
   [:button#clear-completed.clear-completed
    {:hx-delete "/todos"
     :hx-target "#todo-list"
     :hx-swap-oob "true"
     :hx-push-url "/"
-    :class (when-not (pos? (domain/todos-completed)) "hidden")}
+    :class (when-not (pos? (domain/todos-completed todos)) "hidden")}
    "Clear completed"])
 
 (defn template
-  [filter]
+  [todos filter]
   (h/html
    {:mode :html}
    [:html
@@ -89,11 +89,11 @@
        [:input#toggle-all.toggle-all {:type "checkbox"}]
        [:label {:for "toggle-all"} "Mark all as complete"]]
       [:ul#todo-list.todo-list
-       (todo-list (domain/filtered-todo filter @domain/todos))]
+       (todo-list (domain/filtered-todo todos filter))]
       [:footer.footer
-       (item-count)
+       (item-count todos)
        (todo-filters filter)
-       (clear-completed-button)]]
+       (clear-completed-button todos)]]
      [:footer.info
       [:p "Click to edit a todo"]
       [:p "Created by "
