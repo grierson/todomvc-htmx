@@ -37,7 +37,10 @@
 (deftest complete-test
   (testing "Home Page Test"
     (let [port (get-free-port!)
-          sut (system/start {:port port})]
+          sut (system/start {:port port
+                             :db (sorted-map 1 {:id 1
+                                                :name "buy milk"
+                                                :done false})})]
       (try
         (with-open [playwright (Playwright/create)]
           (let [page (setup playwright port)

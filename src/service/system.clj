@@ -27,6 +27,7 @@
 (defn start [opts]
   (ds/start
    system
-   {[:env ::ds/config] {:port (:port opts 3000)}}))
+   {[:env ::ds/config] {:port (:port opts 3000)}
+    [:infrastucture :db ::ds/start] (fn [_] (atom (:db opts (sorted-map))))}))
 
 (defn stop [sut] (ds/stop sut))

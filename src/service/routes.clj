@@ -21,15 +21,6 @@
   (let [id (swap! todos-id inc)]
     (database/add-todo! db id name)))
 
-(defn update-todo! [db id name]
-  (database/update-todo! db id name))
-
-(defn remove-todo! [db id]
-  (database/remove-todo! db id))
-
-(defn remove-all-completed-todo [db]
-  (database/remove-all-complete db))
-
 (defn app-index [db {:keys [parameters headers]}]
   (let [filter (get-in parameters [:query :filter])
         ajax-request? (get headers "hx-request")
@@ -54,7 +45,7 @@
 (defn update-item [db {:keys [parameters]}]
   (let [id (get-in parameters [:path :id])
         name (get-in parameters [:form :name])
-        _ (update-todo! db id name)]
+        _ (database/update-todo! db id name)]
     (render (ui/todo-item id))))
 
 (defn patch-item [db {:keys [parameters]}]
@@ -71,7 +62,7 @@
   (render (ui/item-count (database/get-todos db))))
 
 (defn clear-completed [db _request]
-  (remove-all-completed-todo db)
+  (database/remove-all-complete db)
   (let [todos (database/get-todos db)]
     (render (list (ui/todo-list todos)
                   (ui/item-count todos)
