@@ -7,7 +7,6 @@
    [reitit.ring.middleware.muuntaja :as muuntaja]
    [reitit.ring.middleware.parameters :as parameters]
    [service.domain :as domain]
-   [service.application :as application]
    [service.ui :as ui]
    [hiccup2.core :as h]
    [service.database :as database]))
@@ -15,6 +14,24 @@
 (defn render [handler & [status]]
   {:status (or status 200)
    :body (str (h/html handler))})
+
+(def todos-id (atom 0))
+
+(defn add-todo! [db name]
+  (let [id (swap! todos-id inc)]
+    (database/add-todo! db id name)))
+
+(defn update-todo! [db id name]
+  (database/update-todo! db id name))
+
+(defn toggle-todo! [db id]
+  (database/toggle-todo! db id))
+
+(defn remove-todo! [db id]
+  (database/remove-todo! db id))
+
+(defn remove-all-completed-todo [db]
+  (database/remove-all-complete db))
 
 (defn app-index [db {:keys [parameters headers]}]
   (let [filter (get-in parameters [:query :filter])
@@ -27,25 +44,25 @@
 
 (defn add-item [db {:keys [parameters]}]
   (let [name (get-in parameters [:form :todo])
-        todo (application/add-todo! db name)
+        todo (add-todo! db name)
         todos (database/get-todos db)]
     (render (list (ui/todo-item (val (last todo)))
                   (ui/item-count todos)))))
 
 (defn edit-item [db {:keys [parameters]}]
   (let [id (get-in parameters [:path :id])
-        {:keys [id name]} (get @db id)]
+        {:keys [id name]} (database/get-todo db id)]
     (render (ui/todo-edit id name))))
 
 (defn update-item [db {:keys [parameters]}]
   (let [id (get-in parameters [:path :id])
         name (get-in parameters [:form :name])
-        todo (application/update-todo! db id name)]
-    (render (ui/todo-item (get todo id)))))
+        _ (update-todo! db id name)]
+    (render (ui/todo-item id))))
 
 (defn patch-item [db {:keys [parameters]}]
   (let [id (get-in parameters [:path :id])
-        _ (application/toggle-todo! db id)
+        _ (toggle-todo! db id)
         todo-item (database/get-todo db id)
         todos (database/get-todos db)]
     (render (list (ui/todo-item todo-item)
@@ -53,11 +70,11 @@
                   (ui/clear-completed-button todos)))))
 
 (defn delete-item [db {:keys [parameters]}]
-  (application/remove-todo! db (get-in parameters [:path :id]))
+  (remove-todo! db (get-in parameters [:path :id]))
   (render (ui/item-count (database/get-todos db))))
 
 (defn clear-completed [db _request]
-  (application/remove-all-completed-todo db)
+  (remove-all-completed-todo db)
   (let [todos (database/get-todos db)]
     (render (list (ui/todo-list todos)
                   (ui/item-count todos)
