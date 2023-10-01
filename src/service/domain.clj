@@ -2,7 +2,7 @@
 
 (def todos
   (atom
-   (sorted-map 1 {:id 1 :name "Learn vi" :done true}
+   (sorted-map 1 {:id 1 :name "Learn vi" :done false}
                2 {:id 2 :name "Build todo app with HTMX and Clojure" :done false})))
 
 (def todos-id (atom (count @todos)))

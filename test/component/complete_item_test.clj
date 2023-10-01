@@ -1,10 +1,11 @@
 (ns component.complete-item-test
-  (:require [clojure.test :refer [deftest is testing]]
-            [service.system :as system]
-            [freeport.core :refer [get-free-port!]])
-  (:import [com.microsoft.playwright Playwright]
-           [com.microsoft.playwright.assertions PlaywrightAssertions]
-           [java.util.regex Pattern]))
+  (:require
+   [clojure.test :refer [deftest is testing]]
+   [freeport.core :refer [get-free-port!]]
+   [service.system :as system])
+  (:import
+   [com.microsoft.playwright Playwright]
+   [com.microsoft.playwright.options AriaRole]))
 
 (defn setup [scrapper port]
   (let [browser (.launch (.chromium scrapper))
@@ -13,6 +14,15 @@
     page))
 
 (require 'hashp.core)
+
+(defn d [locator]
+  #p (.evaluate locator "x => x.outerHTML"))
+
+(defn ds [locator]
+  #p
+   (map
+    identity
+    (.evaluateAll locator "locators => locators.map(x => x.outerHTML)")))
 
 (deftest title-test
   (testing "Home Page Test"
@@ -31,6 +41,11 @@
       (try
         (with-open [playwright (Playwright/create)]
           (let [page (setup playwright port)
-                item (.locator page "text=Get Started")]
-            (is (= "Htmx + Clojure" (.title page)))))
+                task (-> page
+                         (.locator "#todo-list")
+                         (.getByRole AriaRole/LISTITEM)
+                         (.first)
+                         (.getByRole AriaRole/CHECKBOX))]
+            (.click task)
+            (is (true? (.isChecked task)))))
         (finally (system/stop sut))))))
