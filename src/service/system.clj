@@ -5,20 +5,17 @@
    [org.httpkit.server :as hk-server])
   (:gen-class))
 
-(defn start [handler]
-  (hk-server/run-server
-   handler
-   {:port 3000
-    :join? false
-    :async? true
-    :legacy-return-value? false}))
-
-(defn stop [server]
-  (hk-server/server-stop! server))
-
 (def system
   {::ds/defs
    {:http {:server #::ds{:start (fn [_]
-                                  (start #'routes/app))
+                                  (hk-server/run-server
+                                   #'routes/app
+                                   {:port 3000
+                                    :join? false
+                                    :async? true
+                                    :legacy-return-value? false}))
                          :stop  (fn [{:keys [::ds/instance]}]
-                                  (stop instance))}}}})
+                                  (hk-server/server-stop! instance))}}}})
+
+(defn start [] (ds/start system))
+(defn stop [sut] (ds/stop sut))
