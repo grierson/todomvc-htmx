@@ -7,15 +7,20 @@
 
 (def system
   {::ds/defs
-   {:http {:server #::ds{:start (fn [_]
+   {:http {:server #::ds{:config {:port 3000}
+                         :start (fn [{:keys [::ds/config]}]
                                   (hk-server/run-server
                                    #'routes/app
-                                   {:port 3000
+                                   {:port (:port config)
                                     :join? false
                                     :async? true
                                     :legacy-return-value? false}))
                          :stop  (fn [{:keys [::ds/instance]}]
                                   (hk-server/server-stop! instance))}}}})
 
-(defn start [] (ds/start system))
+(defn start [opts]
+  (ds/start
+   system
+   {[:http :server ::ds/config] {:port (:port opts 3000)}}))
+
 (defn stop [sut] (ds/stop sut))

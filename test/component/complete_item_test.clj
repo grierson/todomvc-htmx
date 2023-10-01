@@ -3,18 +3,19 @@
             [service.system :as system])
   (:import [com.microsoft.playwright Playwright]))
 
-(defn setup [scrapper]
+(defn setup [scrapper port]
   (let [browser (.launch (.chromium scrapper))
         page (.newPage browser)]
-    (.navigate page "http://localhost:3000")
+    (.navigate page (str "http://localhost:" port))
     page))
 
 (deftest home-page-test
   (testing "Home Page Test"
-    (let [sut (system/start)]
+    (let [port 4000
+          sut (system/start {:port port})]
       (try
         (with-open [playwright (Playwright/create)]
-          (let [page (setup playwright)]
+          (let [page (setup playwright port)]
             (is (= "Htmx + Clojure" (.title page)))))
         (finally (system/stop sut))))))
 

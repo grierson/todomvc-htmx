@@ -18,4 +18,5 @@
         :extra-deps {org.clojure/tools.namespace {:mvn/version "1.4.4"}}}
 
   :test       {:extra-paths ["test"]
-               :extra-deps {com.microsoft.playwright/playwright {:mvn/version "1.38.0"}}}}}
+               :extra-deps {freeport/freeport {:mvn/version "1.0.0"}
+                            com.microsoft.playwright/playwright {:mvn/version "1.38.0"}}}}}
