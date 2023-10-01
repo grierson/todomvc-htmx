@@ -24,9 +24,6 @@
 (defn update-todo! [db id name]
   (database/update-todo! db id name))
 
-(defn toggle-todo! [db id]
-  (database/toggle-todo! db id))
-
 (defn remove-todo! [db id]
   (database/remove-todo! db id))
 
@@ -62,7 +59,7 @@
 
 (defn patch-item [db {:keys [parameters]}]
   (let [id (get-in parameters [:path :id])
-        _ (toggle-todo! db id)
+        _ (database/toggle-todo! db id)
         todo-item (database/get-todo db id)
         todos (database/get-todos db)]
     (render (list (ui/todo-item todo-item)
@@ -70,7 +67,7 @@
                   (ui/clear-completed-button todos)))))
 
 (defn delete-item [db {:keys [parameters]}]
-  (remove-todo! db (get-in parameters [:path :id]))
+  (database/remove-todo! db (get-in parameters [:path :id]))
   (render (ui/item-count (database/get-todos db))))
 
 (defn clear-completed [db _request]
