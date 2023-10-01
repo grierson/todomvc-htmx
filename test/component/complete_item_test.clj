@@ -52,3 +52,22 @@
             (.click task)
             (is (true? (.isChecked task)))))
         (finally (system/stop sut))))))
+
+(deftest undo-test
+  (testing "Home Page Test"
+    (let [port (get-free-port!)
+          sut (system/start {:port port
+                             :db (sorted-map 1 {:id 1
+                                                :name "buy milk"
+                                                :done true})})]
+      (try
+        (with-open [playwright (Playwright/create)]
+          (let [page (setup playwright port)
+                task (-> page
+                         (.locator "#todo-list")
+                         (.getByRole AriaRole/LISTITEM)
+                         (.first)
+                         (.getByRole AriaRole/CHECKBOX))]
+            (.click task)
+            (is (false? (.isChecked task)))))
+        (finally (system/stop sut))))))
