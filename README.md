@@ -1,5 +1,9 @@
 # TODOMVC (HTMX + Clojure)
 
-## TODO
+- `make run` - Run application on `localhost:3000`
+- `make repl` - Start repl
 
-- Testing user click
+- Clojure
+- HTMX + Hyperscript
+- Ring + Reitit
+- Donut.system
