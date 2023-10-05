@@ -4,14 +4,13 @@
    [clojure.java.io :as io]
    [donut.system :as ds]
    [service.routes :as routes]
-   [org.httpkit.server :as hk-server])
-  (:gen-class))
+   [org.httpkit.server :as hk-server]))
 
 (def system
   {::ds/defs
-   {:env #::ds{:config (aero/read-config (io/resource "config.edn"))}
+   {:env {}
     :infrastucture {:db #::ds{:start (fn [_] (atom (sorted-map)))}}
-    :http {:server #::ds{:config {:port (ds/ref [:env ::ds/config :port])
+    :http {:server #::ds{:config {:port (ds/ref [:env :http :port])
                                   :handler (ds/ref [:http :handler])}
                          :start (fn [{:keys [::ds/config]}]
                                   (hk-server/run-server
@@ -26,10 +25,16 @@
                           :start (fn [{:keys [::ds/config]}]
                                    (routes/app config))}}}})
 
-(defn start [opts]
+(defn init [{:keys [port db]}]
   (ds/start
    system
-   {[:env ::ds/config] {:port (:port opts 3000)}
-    [:infrastucture :db ::ds/start] (fn [_] (atom (:db opts (sorted-map))))}))
+   {[:env :http :port] port
+    [:infrastucture :db ::ds/start] (fn [_] (atom db))}))
+
+(defn start [overrides]
+  (let [config (aero/read-config (io/resource "config.edn"))
+        {:keys [port]} (merge config overrides)]
+    (init {:port port
+           :db (sorted-map)})))
 
 (defn stop [sut] (ds/stop sut))
