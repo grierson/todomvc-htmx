@@ -1,5 +1,7 @@
 (ns service.system
   (:require
+   [aero.core :as aero]
+   [clojure.java.io :as io]
    [donut.system :as ds]
    [service.routes :as routes]
    [org.httpkit.server :as hk-server])
@@ -7,7 +9,7 @@
 
 (def system
   {::ds/defs
-   {:env #::ds{:config {:port 3000}}
+   {:env #::ds{:config (aero/read-config (io/resource "config.edn"))}
     :infrastucture {:db #::ds{:start (fn [_] (atom (sorted-map)))}}
     :http {:server #::ds{:config {:port (ds/ref [:env ::ds/config :port])
                                   :handler (ds/ref [:http :handler])}
