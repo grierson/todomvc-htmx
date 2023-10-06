@@ -6,8 +6,9 @@
   (:gen-class))
 
 (defn -main
-  [overrides]
-  (let [config (aero/read-config (io/resource "config.edn"))
-        {:keys [port]} (merge config overrides)]
-    (system/start {:port port
-                   :db (sorted-map)})))
+  ([] (-main {}))
+  ([overrides]
+   (let [config (aero/read-config (io/resource "config.edn"))
+         {:keys [port]} (merge config overrides)]
+     (system/start {:port port
+                    :db (sorted-map)}))))
