@@ -1,0 +1,14 @@
+{:tasks {start {:doc "Run App"
+                :task (do
+                        (println "Running app..")
+                        (shell "clj -X service.core/-main"))}
+         dev {:doc "Run REPL"
+              :task (shell "clj -M:repl:dev:test")}
+         clean {:doc "Removes target folder"
+                :requires ([babashka.fs :as fs])
+                :task (do (println "Removing target folder.")
+                          (fs/delete-tree "target"))}
+         build
+         {:doc "Build uberjar"
+          :task (do (println "Building uberjar...")
+                    (shell "clj -T:build uber"))}}}
