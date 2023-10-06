@@ -11,4 +11,8 @@
          build
          {:doc "Build uberjar"
           :task (do (println "Building uberjar...")
-                    (shell "clj -T:build uber"))}}}
+                    (shell "clj -T:build uber"))}
+         docker
+         {:doc "Run with docker"
+          :task (do (println "Running docker compose...")
+                    (shell "docker compose up app --build"))}}}
