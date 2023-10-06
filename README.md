@@ -1,9 +1,11 @@
 # TODOMVC (HTMX + Clojure)
 
-- `make run` - Runs application on `localhost:3000` by default
-  - `clj -X service.system/start :port 4000` to override from cli
+- `bb tasks` - List all tasks
+- `bb start` - Runs application on `localhost:3000` by default
   - update `resources/config.edn` to provide different port via config
-- `make repl` - Start repl
+- `bb dev` - Start repl
+- `bb clean` - Clean Uber
+- `bb build` - Build Uber
 
 ## Tools
 
@@ -11,3 +13,4 @@
 - HTMX + Hyperscript
 - Ring + Reitit
 - Donut.system
+- Babashka
