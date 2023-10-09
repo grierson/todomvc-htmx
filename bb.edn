@@ -15,4 +15,4 @@
          docker
          {:doc "Run with docker"
           :task (do (println "Running docker compose...")
-                    (shell "docker compose up app --build"))}}}
+                    (shell "docker compose up --build"))}}}

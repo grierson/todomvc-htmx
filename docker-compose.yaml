@@ -1,6 +1,6 @@
-version: "3.9"
+version: "3.8"
 services:
-  app:
+  ui:
     build: .
     ports:
       - 8000:3000
